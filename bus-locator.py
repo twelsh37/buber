@@ -58,7 +58,8 @@ def main():
               "175"]
 
     if what_bus in busses:
-        bus = bus_service(what_bus)
+        bus = bus_route(what_bus)
+        #bus = bus_service(what_bus)
         fail_count = 0
     else:
         # A failed  buss number increments the fail_count counter
@@ -66,22 +67,25 @@ def main():
         print("How many times have we failed?: " + str(fail_count))
         # If they end up here they didnt enter a valid bus number
         # Ask them to re enter the bus number
+        ######## THis is still in error - need to work on this ################  - 17/05/2020 tw
         what_bus = input("Sorry thats not a Colchester bus. Please enter your bus number?: ")
         if what_bus in busses:
-            bus = bus_service(what_bus)
+            bus = bus_route(what_bus)
+            #bus = bus_service(what_bus)
         else:
             print("STILL IN ERROR!!!")
 
 
     # A little bit of Essex speak init
-    print("\nBOSH!!!, Here's the bus you want geez. The number "  + bus[0] + " runs between " + bus[1] + " and " + bus[2])
+    print("\nBOSH!!!, Here's the bus you want geez. The number "  + bus[0] + " runs between " + bus[1] + " and "
+          + bus[2])
 
 def bus_service(bus_number):
 
     bus = bus_number
     # Try out retrieving a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
-    url = 'https://transportapi.com/v3/uk/bus/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus,APP_ID,API_KEY)
+    url = 'https://transportapi.com/v3/uk/bus/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus, APP_ID, API_KEY)
     http = urllib3.PoolManager()
 
     # Request our data, and decode the json data returned
@@ -93,6 +97,21 @@ def bus_service(bus_number):
     # Return the bus number and its endpoints
     return bus_number, outbound, inbound
 
+def bus_route(bus_number):
+
+    bus = bus_number
+    # Try out retrieving a URL via urllib3
+    # Use %s to pass in the Constants and Variables to make up the URL
+    url = 'https://transportapi.com/v3/uk/bus/route/FESX/%s/outbound/1500AA20/2020-05-15/07:10/timetable.json?' \
+          'app_id=%s&app_key=%s&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+
+    http = urllib3.PoolManager()
+
+    # Request our data, and decode the json data returned
+    response = http.request('GET', url)
+    my_dict = json.loads(response.data.decode('utf-8'))
+    print(my_dict)
+    print(my_dict['stops'][00]['name'])
 
 if __name__ == '__main__':
     main()

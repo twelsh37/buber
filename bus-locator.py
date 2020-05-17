@@ -46,15 +46,17 @@ def main():
     # variables for main
     fail_count = 0
 
-    # define a list of valid Colchester busses that we will accept
-    busses =["17", "61", "62", "62A", "62B", "62C", "64", "64A", "65", "66", "66B", "67", "67B", "67C", "68", "70",
-             "71", "71A", "71C", "71X", "74B", "75", "75A", "76", "88", "88A", "88B", "102", "103", "104", "174",
-             "175"]
+
     # Ask the user to input a bus number
     what_bus = input("What bus do you want?: ")
 
     # Evaluate the user input
     # Is the users bus selection in our busses list? if yes, then proced
+    # These are only First Essex busses
+    busses = ["17", "61", "62", "62A", "62B", "62C", "64", "64A", "65", "66", "66B", "67", "67B", "67C", "68", "70",
+              "71", "71A", "71C", "71X", "74B", "75", "75A", "76", "88", "88A", "88B", "102", "103", "104", "174",
+              "175"]
+
     if what_bus in busses:
         bus = bus_service(what_bus)
         fail_count = 0
@@ -69,8 +71,10 @@ def main():
             bus = bus_service(what_bus)
         else:
             print("STILL IN ERROR!!!")
+
+
     # A little bit of Essex speak init
-    print("BOSH!!!, Here's the bus you want geez: ", bus)
+    print("\nBOSH!!!, Here's the bus you want geez. The number "  + bus[0] + " runs between " + bus[1] + " and " + bus[2])
 
 def bus_service(bus_number):
 
@@ -83,17 +87,11 @@ def bus_service(bus_number):
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
     my_dict = json.loads(response.data.decode('utf-8'))
-    #print(my_dict)
-    # set up a key and values so we can call them by name
-    # below returns the value of the key 'line' which is
-    # our bus Number 65
-    key = list(my_dict.keys())
-    values = list(my_dict.values())
-    #print(values[key.index("line")])
-    print(values[key.index("directions")])
-    # A little bit of Essex speak init
-    #print("Its only the fucking bus init geez: %s" % values[key.index("line")])
-    return bus_number
+    outbound = my_dict['directions'][0]['destination']['description']
+    inbound = my_dict['directions'][1]['destination']['description']
+
+    # Return the bus number and its endpoints
+    return bus_number, outbound, inbound
 
 
 if __name__ == '__main__':

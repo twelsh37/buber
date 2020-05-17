@@ -56,7 +56,7 @@ def main():
     # Evaluate the user input
     # Is the users bus selection in our busses list? if yes, then proced
     if what_bus in busses:
-        jimmy = bus_service(what_bus)
+        bus = bus_service(what_bus)
         fail_count = 0
     else:
         # A failed  buss number increments the fail_count counter
@@ -66,11 +66,11 @@ def main():
         # Ask them to re enter the bus number
         what_bus = input("Sorry thats not a Colchester bus. Please enter your bus number?: ")
         if what_bus in busses:
-            jimmy = bus_service(what_bus)
+            bus = bus_service(what_bus)
         else:
             print("STILL IN ERROR!!!")
     # A little bit of Essex speak init
-    print("BOSH!!!, Here's the bus you want geez: ", jimmy)
+    print("BOSH!!!, Here's the bus you want geez: ", bus)
 
 def bus_service(bus_number):
 

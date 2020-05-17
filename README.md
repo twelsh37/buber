@@ -1,6 +1,6 @@
 # buber
-Bus Finder app for CodeInPlace 2020
-This is the finl project code for my submission to CodeInPlace 2020
+Bus Finder app for CodeInPlace 2020.
+This is the final project code for my submission to CodeInPlace 2020
 A course to introduce the participant to Python
 
 # Description:

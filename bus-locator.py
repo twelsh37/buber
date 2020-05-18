@@ -58,8 +58,9 @@ def main():
               "175"]
 
     if what_bus in busses:
-        bus = bus_route(what_bus)
-        #bus = bus_service(what_bus)
+
+        bus = bus_service(what_bus)
+        bus1 = bus_route(what_bus)
         fail_count = 0
     else:
         # A failed  buss number increments the fail_count counter
@@ -99,18 +100,18 @@ def bus_service(bus_number):
 
 def bus_route(bus_number):
 
-    bus = bus_number
+    bus1 = bus_number
     # Try out retrieving a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
     url = 'https://transportapi.com/v3/uk/bus/route/FESX/%s/outbound/1500AA20/2020-05-15/07:10/timetable.json?' \
-          'app_id=%s&app_key=%s&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+          'app_id=%s&app_key=%s&edge_geometry=false&stops=ALL' % (bus1, APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
     my_dict = json.loads(response.data.decode('utf-8'))
-    print(my_dict)
+    #print(my_dict)
     print(my_dict['stops'][00]['name'])
 
 if __name__ == '__main__':

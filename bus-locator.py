@@ -14,6 +14,8 @@ https://developer.transportapi.com/
 3. Take user input for bus number. Only allow then to enter the busses we have supplied - DONE
     3.1 If user enter an incorrect bus number twice offer them the option to find the bus number by final destination
 4. User enters a bus number - program tells user where bus comes and goes to and the departure time (from Town Center)
+    4.1 Buses 62, 65, and 68 all return route data but that is because the URL being passed has the atcocode for
+        Causton Road and these buses are on that route. Other routes will have different stops with different atcocodes.
 5. User enters a destination - Program tells user what bus goes there and when the next departure is (from Town Center)
 6. Display data to user on a map. - Milestone 1
 
@@ -111,8 +113,9 @@ def bus_route(bus_number):
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
     my_dict = json.loads(response.data.decode('utf-8'))
-    #print(my_dict)
-    print(my_dict['stops'][00]['name'])
+    for stop in my_dict['stops']:
+        print("The bus is at the " + stop['stop_name'] + " stop at " + stop['time'])
+        print("The bus stop is at lat/long " + str(stop['latitude']) + "," + str(stop['longitude']))
 
 if __name__ == '__main__':
     main()

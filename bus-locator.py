@@ -8,6 +8,9 @@ through Colchester, Essex, UK
 This will be done with the help of the transportapi
 https://developer.transportapi.com/
 
+Map plotting is via folium and teh following tutorial
+https://www.geeksforgeeks.org/python-plotting-google-map-using-folium-package/?ref=rp
+
 ### Basic Decomposition: - "Eat the elephant one bite at a time" ###
 1. Hold API key and Program ID so we dont need to keep entering it or URLS - DONE
 2. Retreive data for the Number 65 bus heading outbound - DONE
@@ -36,6 +39,7 @@ Tools/Frameworks
 # Import Libraries we need
 import urllib3
 import json
+import folium
 
 
 
@@ -70,7 +74,7 @@ def main():
         print("How many times have we failed?: " + str(fail_count))
         # If they end up here they didnt enter a valid bus number
         # Ask them to re enter the bus number
-        ######## THis is still in error - need to work on this ################  - 17/05/2020 tw
+        ######## This is still in error - need to work on this ################  - 17/05/2020 tw
         what_bus = input("Sorry thats not a Colchester bus. Please enter your bus number?: ")
         if what_bus in busses:
             bus = bus_route(what_bus)
@@ -116,6 +120,8 @@ def bus_route(bus_number):
     for stop in my_dict['stops']:
         print("The bus is at the " + stop['stop_name'] + " stop at " + stop['time'])
         print("The bus stop is at lat/long " + str(stop['latitude']) + "," + str(stop['longitude']))
+
+
 
 if __name__ == '__main__':
     main()

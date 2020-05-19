@@ -84,6 +84,7 @@ https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07
 # Import Libraries we need
 import urllib3
 import json
+import pandas as pd
 import folium
 
 
@@ -91,6 +92,7 @@ import folium
 # Constants
 APP_ID = '9e91c41c'
 API_KEY = 'ebaa5b9461f7f42778146f909073d17a'
+BASE_URL = 'https://transportapi.com/v3/uk/bus/'
 
 def main():
 
@@ -104,14 +106,14 @@ def main():
     # Evaluate the user input
     # Is the users bus selection in our busses list? if yes, then proced
     # These are only First Essex busses
-    busses = ["17", "61", "62", "62A", "62B", "62C", "64", "64A", "65", "66", "66B", "67", "67B", "67C", "68", "70",
+    buses = ["17", "61", "62", "62A", "62B", "62C", "64", "64A", "65", "66", "66B", "67", "67B", "67C", "68", "70",
               "71", "71A", "71C", "71X", "74B", "75", "75A", "76", "88", "88A", "88B", "102", "103", "104", "174",
               "175"]
 
-    if what_bus in busses:
+    if what_bus in buses:
 
-        bus = bus_service(what_bus)
-        bus1 = bus_route(what_bus)
+        #bus = bus_service(what_bus)
+        bus = bus_route(what_bus)
         fail_count = 0
     else:
         # A failed  buss number increments the fail_count counter
@@ -121,9 +123,10 @@ def main():
         # Ask them to re enter the bus number
         ######## This is still in error - need to work on this ################  - 17/05/2020 tw
         what_bus = input("Sorry thats not a Colchester bus. Please enter your bus number?: ")
-        if what_bus in busses:
-            bus = bus_route(what_bus)
+        if what_bus in buses:
             #bus = bus_service(what_bus)
+            bus = bus_route(what_bus)
+
         else:
             print("STILL IN ERROR!!!")
 
@@ -137,7 +140,7 @@ def bus_service(bus_number):
     bus = bus_number
     # Try out retrieving a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
-    url = 'https://transportapi.com/v3/uk/bus/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus, APP_ID, API_KEY)
+    url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus, APP_ID, API_KEY)
     http = urllib3.PoolManager()
 
     # Request our data, and decode the json data returned
@@ -151,7 +154,7 @@ def bus_service(bus_number):
 
 def next_bus_live():
     # URL to retrieve data. This mayy need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = 'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=%s&app_key=%s&group=route&nextbuses=yes' % ( APP_ID, API_KEY)
+    url = BASE_URL + '/stop/1500AA20/live.json?app_id=%s&app_key=%s&group=route&nextbuses=yes' % ( APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -163,7 +166,7 @@ def next_bus_live():
 
 def next_bus_timetabled():
     # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = 'https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s' % (APP_ID, API_KEY)
+    url = BASE_URL + '/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s' % (APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -174,11 +177,11 @@ def next_bus_timetabled():
 
 def bus_route(bus_number):
 
-    bus1 = bus_number
+    bus = bus_number
     # Try out retrieving a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
-    url = 'https://transportapi.com/v3/uk/bus/route/FESX/%s/outbound/1500AA20/2020-05-15/07:10/timetable.json?' \
-          'app_id=%s&app_key=%s&edge_geometry=false&stops=ALL' % (bus1, APP_ID, API_KEY)
+    url = BASE_URL + '/route/FESX/%s/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s' \
+                     '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -190,6 +193,10 @@ def bus_route(bus_number):
         print("The bus stop is at lat/long " + str(stop['latitude']) + "," + str(stop['longitude']))
 
 
+
+def map_it():
+    # Folium mapping
+    pass
 
 if __name__ == '__main__':
     main()

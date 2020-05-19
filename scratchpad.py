@@ -1,5 +1,6 @@
 ﻿import urllib3
 import json
+import datetime
 import folium
 import pandas as pd
 
@@ -52,14 +53,15 @@ https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07
 # Constants
 APP_ID = '9e91c41c'
 API_KEY = 'ebaa5b9461f7f42778146f909073d17a'
+BASE_URL = 'https://transportapi.com/v3/uk/bus'
 
 
 def main():
-
-    bus_service(65)
+    #api_to_dataframe()
+    #bus_service(65)
     #next_bus_live()
     #next_bus_timetabled()
-    #bus_route()
+    bus_route()
 
     #url = 'https://transportapi.com/v3/uk/bus/route/FESX/%s/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s&edge_geometry=false&stops=ALL'
 
@@ -116,16 +118,17 @@ def bus_service(bus_number):
     bus = bus_number
     # Try out retrieving a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
-    url = 'https://transportapi.com/v3/uk/bus/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus, APP_ID, API_KEY)
+    url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus, APP_ID, API_KEY)
     http = urllib3.PoolManager()
 
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
     bus_service_dict = json.loads(response.data.decode('utf-8'))
+    print(bus_service_dict)
 
 def next_bus_live():
-    # URL to retrieve data. This mayy need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = 'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=%s&app_key=%s&group=route&nextbuses=yes' % ( APP_ID, API_KEY)
+    # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
+    url = BASE_URL + '/stop/1500AA20/live.json?app_id=%s&app_key=%s&group=route&nextbuses=yes' % ( APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -137,7 +140,7 @@ def next_bus_live():
 
 def next_bus_timetabled():
     # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = 'https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s' % (APP_ID, API_KEY)
+    url = BASE_URL + '/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s' % (APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -147,15 +150,50 @@ def next_bus_timetabled():
     print(next_bus_timetabled_dict)
 
 def bus_route():
+    current_date = datetime.date.today()
+    current_date = current_date.strftime("%Y-%m-%d")
+
+    bus_number = 64
+
     # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = 'https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s&edge_geometry=false&stops=ALL' % (APP_ID, API_KEY)
+    url = BASE_URL + '/route/FESX/%s/outbound/1500IM322/%s/07:42/timetable.json?app_id=%s&app_key=%s&edge_geometry=false&stops=ALL' % (bus_number,current_date,APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
     bus_route_dict = json.loads(response.data.decode('utf-8'))
-    print(bus_route_dict)
+    #print(bus_route_dict)
+
+    i = 0
+    while i < len(bus_route_dict['stops']):
+        #location_dict.update({stop['stop_name'] : stop['latitude'], stop['longitude']})
+        #print(location_dict)
+        print("The bus is at the " + bus_route_dict['stops'][i]['stop_name'] + " stop at " + bus_route_dict['stops'][i]['time'])
+        print("The bus stop is at lat/long: " + str(bus_route_dict['stops'][i]['latitude']) + "," + str(bus_route_dict['stops'][i]['longitude']))
+
+        i = i + 1
+
+def api_to_dataframe():
+    #temp bus for testing. TThis should be passed in as required
+    bus1 = 65
+
+    # this is the bus_route() function URL
+    url = BASE_URL + '/route/FESX/%s/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s' \
+                     '&edge_geometry=false&stops=ALL' % (bus1, APP_ID, API_KEY)
+
+    http = urllib3.PoolManager()
+
+    # Request our data, and decode the json data returned
+    response = http.request('GET', url)
+    api_resp_dict = json.loads(response.data.decode('utf-8'))
+
+    for stop in api_resp_dict['stops']:
+        print(stop['stop_name'] + "," +  str(stop['latitude']) + "," + str(stop['longitude']))
+
+    #print(api_resp_dict['stops'])
+    #df = pd.DataFrame(x['stops'])
+    #print(df.head())
 
 if __name__ == '__main__':
     main()

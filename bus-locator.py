@@ -35,6 +35,51 @@ Tools/Frameworks
 1. Kivy Framework - https://realpython.com/mobile-app-kivy-python/
 2. Android dev app - https://developer.android.com/studio
 
+TRANSPORT API
+1. This URL identifies One particular bus service, identified by line and operator - Function bus_service(bus_number)
+It can be used to get the BUS_START and BUS_END of the journey
+RETURNS: bus_number, outbound, inbound
+
+'https://transportapi.com/v3/uk/bus/services/FESX:65.json?app_id=9e91c41c&app_key=ebaa5b9461f7f42778146f909073d17a'
+
+
+2. Bus departures at a given bus stop (live) - Function next_bus_live()
+By passing in the atcocode for the bus stop you can get live departure information for that stop
+##PARAMETERS TO PROVIDE
+atcocode
+
+##INTERESTING VALUES IN RETURENED DATA
+line_name, direction, status, best_departure_estimate
+
+This returns any bus operating company utilising that stop
+Data is returned in a dictionary of x lists where x is the number of buses that use that stop
+
+First part of data recieved from url pull
+
+{'65': [{'mode': 'bus', 'line': '65', 'line_name': '65', 'direction': 'Highwoods Tesco', 'operator': 'FESX',
+'date': '2020-05-19', 'expected_departure_date': '2020-05-19', 'aimed_departure_time': '09:32',
+'expected_departure_time': '09:30', 'best_departure_estimate': '09:30',
+'status': {'cancellation': {'value': False, 'reason': None}}, 'source': 'FirstTicketerNationwide', 'dir': 'outbound',
+'operator_name': 'First Essex',
+'id': <URL>>
+
+'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=9e91c41c&app_key=ebaa5b9461f7f42778146f909073d17a&group=route&nextbuses=yes'
+
+3. Bus departures at a given bus stop (timetabled) - Function next_bus_timetabled()
+This URL gives you the timetabled information for that particulatr stop
+##PARAMETERS TO PROVIDE
+date, time, atcocode
+
+https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=9e91c41c&app_key=ebaa5b9461f7f42778146f909073d17a&group=route
+
+4. The route of one specific bus - Function bus_route()
+This gives every stop the bus will make between its atcocode bust stop and the final destination
+
+##PARAMETERS TO PROVIDE
+date, time, atcocode
+
+https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=9e91c41c&app_key=ebaa5b9461f7f42778146f909073d17a&edge_geometry=false&stops=ALL
+
 """
 # Import Libraries we need
 import urllib3
@@ -103,6 +148,29 @@ def bus_service(bus_number):
 
     # Return the bus number and its endpoints
     return bus_number, outbound, inbound
+
+def next_bus_live():
+    # URL to retrieve data. This mayy need more paramaters to be passed in. Currently only APP_ID and API_KEY
+    url = 'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=%s&app_key=%s&group=route&nextbuses=yes' % ( APP_ID, API_KEY)
+
+    http = urllib3.PoolManager()
+
+    # Request our data, and decode the json data returned
+    response = http.request('GET', url)
+    next_bus_live_dict = json.loads(response.data.decode('utf-8'))
+    print(next_bus_live_dict)
+
+
+def next_bus_timetabled():
+    # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
+    url = 'https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s' % (APP_ID, API_KEY)
+
+    http = urllib3.PoolManager()
+
+    # Request our data, and decode the json data returned
+    response = http.request('GET', url)
+    next_bus_timetabled_dict = json.loads(response.data.decode('utf-8'))
+    print(next_bus_timetabled_dict)
 
 def bus_route(bus_number):
 

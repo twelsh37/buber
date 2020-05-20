@@ -16,8 +16,8 @@ https://www.geeksforgeeks.org/python-plotting-google-map-using-folium-package/?r
 2. Retreive data for the Number 65 bus heading outbound - DONE
 3. Take user input for bus number. Only allow then to enter the buses we have supplied - DONE
     3.1 If user enter an incorrect bus number twice offer them the option to find the bus number by final destination
-4. User enters a bus number. We are only using a subset of buses for Colchester. "65", "67", "70", "74B", "88", "104"
-   We have atcocodes for these stops and can define start and end points
+4. User enters a bus number. We are only using a subset of buses for Colchester. "64", "65", "67", "88", "104".
+We have atcocodes for these stops and can define start and end points
 5. User enters a destination - Program tells user what bus goes there and when the next departure is (from Town Center)
 6. Display data to user on a map. - Milestone 1
 
@@ -103,7 +103,7 @@ def main():
     # Evaluate the user input
     # Is the users bus selection in our busses list? if yes, then proced
     # These are only First Essex busses
-    buses = ["65", "67", "70", "74B", "88", "104"]
+    buses = ["64", "65", "67", "70", "74B", "88", "104"]
 
     if what_bus in buses:
         bus = bus_service(what_bus)

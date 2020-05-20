@@ -153,10 +153,9 @@ def bus_route():
     current_date = datetime.date.today()
     current_date = current_date.strftime("%Y-%m-%d")
 
-    bus_number = 64
-
+    bus_number = 74
     # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = BASE_URL + '/route/FESX/%s/outbound/1500IM322/%s/07:42/timetable.json?app_id=%s&app_key=%s&edge_geometry=false&stops=ALL' % (bus_number,current_date,APP_ID, API_KEY)
+    url = BASE_URL + '/route/FESX/%s/outbound/150033038003/%s/07:37/timetable.json?app_id=%s&app_key=%s&edge_geometry=false&stops=ALL' % (bus_number,current_date,APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 

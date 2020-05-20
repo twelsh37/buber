@@ -14,11 +14,10 @@ https://www.geeksforgeeks.org/python-plotting-google-map-using-folium-package/?r
 ### Basic Decomposition: - "Eat the elephant one bite at a time" ###
 1. Hold API key and Program ID so we dont need to keep entering it or URLS - DONE
 2. Retreive data for the Number 65 bus heading outbound - DONE
-3. Take user input for bus number. Only allow then to enter the busses we have supplied - DONE
+3. Take user input for bus number. Only allow then to enter the buses we have supplied - DONE
     3.1 If user enter an incorrect bus number twice offer them the option to find the bus number by final destination
-4. User enters a bus number - program tells user where bus comes and goes to and the departure time (from Town Center)
-    4.1 Buses 62, 65, and 68 all return route data but that is because the URL being passed has the atcocode for
-        Causton Road and these buses are on that route. Other routes will have different stops with different atcocodes.
+4. User enters a bus number. We are only using a subset of buses for Colchester. "65", "67", "70", "74B", "88", "104"
+   We have atcocodes for these stops and can define start and end points
 5. User enters a destination - Program tells user what bus goes there and when the next departure is (from Town Center)
 6. Display data to user on a map. - Milestone 1
 
@@ -96,9 +95,7 @@ BASE_URL = 'https://transportapi.com/v3/uk/bus/'
 
 def main():
 
-    # variables for main
-    fail_count = 0
-
+    # Variables for main
 
     # Ask the user to input a bus number
     what_bus = input("What bus do you want?: ")
@@ -106,33 +103,25 @@ def main():
     # Evaluate the user input
     # Is the users bus selection in our busses list? if yes, then proced
     # These are only First Essex busses
-    buses = ["17", "61", "62", "62A", "62B", "62C", "64", "64A", "65", "66", "66B", "67", "67B", "67C", "68", "70",
-              "71", "71A", "71C", "71X", "74B", "75", "75A", "76", "88", "88A", "88B", "102", "103", "104", "174",
-              "175"]
+    buses = ["65", "67", "70", "74B", "88", "104"]
 
     if what_bus in buses:
-
-        #bus = bus_service(what_bus)
-        bus = bus_route(what_bus)
-        fail_count = 0
+        bus = bus_service(what_bus)
+        #bus = bus_route(what_bus)
     else:
-        # A failed  buss number increments the fail_count counter
-        fail_count += 1
-        print("How many times have we failed?: " + str(fail_count))
         # If they end up here they didnt enter a valid bus number
         # Ask them to re enter the bus number
         ######## This is still in error - need to work on this ################  - 17/05/2020 tw
-        what_bus = input("Sorry thats not a Colchester bus. Please enter your bus number?: ")
+        what_bus = input("Sorry thats not a Colchester bus we cover.  Your choices are:\n '65', '67', '70', '74B', '88', '104' \nPlease enter your bus number?: ")
         if what_bus in buses:
-            #bus = bus_service(what_bus)
-            bus = bus_route(what_bus)
-
+            bus = bus_service(what_bus)
+            #bus = bus_route(what_bus)
         else:
-            print("STILL IN ERROR!!!")
-
+            print("Im sorry, that is not a route we cover. Good bye")
+            quit()
 
     # A little bit of Essex speak init
-    print("\nBOSH!!!, Here's the bus you want geez. The number "  + bus[0] + " runs between " + bus[1] + " and "
+    print("\nBOSH!!!, Here's the bus you want peeps.\n The number "  + bus[0] + " runs between " + bus[1] + " and "
           + bus[2])
 
 def bus_service(bus_number):
@@ -145,15 +134,15 @@ def bus_service(bus_number):
 
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
-    my_dict = json.loads(response.data.decode('utf-8'))
-    outbound = my_dict['directions'][0]['destination']['description']
-    inbound = my_dict['directions'][1]['destination']['description']
+    bus_service_dict = json.loads(response.data.decode('utf-8'))
+    outbound = bus_service_dict['directions'][0]['destination']['description']
+    inbound = bus_service_dict['directions'][1]['destination']['description']
 
     # Return the bus number and its endpoints
     return bus_number, outbound, inbound
 
 def next_bus_live():
-    # URL to retrieve data. This mayy need more paramaters to be passed in. Currently only APP_ID and API_KEY
+    # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
     url = BASE_URL + '/stop/1500AA20/live.json?app_id=%s&app_key=%s&group=route&nextbuses=yes' % ( APP_ID, API_KEY)
 
     http = urllib3.PoolManager()

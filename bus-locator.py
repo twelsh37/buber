@@ -85,8 +85,7 @@ import urllib3
 import json
 import pandas as pd
 import folium
-
-
+import sys
 
 # Constants
 APP_ID = '9e91c41c'
@@ -95,41 +94,60 @@ BASE_URL = 'https://transportapi.com/v3/uk/bus/'
 
 def main():
 
-    # Variables for main
-
     # Ask the user to input a bus number
     what_bus = input("What bus do you want?: ")
 
+    # Validate if it is a service we support
+    bus = validate_bus(what_bus)
+    # DEBUG - TO BE REMOVED
+    print("From validate_bus() we got " + str(bus))
+
+    # only work on valid bus routes supported by our application
+    if bus != "Unsupported service":
+        # Get some information on the bus_service
+        bus_serv, outbound, inbound = bus_service(bus)
+        print("From bus_service(): " + bus_serv + "," + outbound + ", " + inbound)
+    else:
+        sys.exit("Unsupported service at this time. Goodbye")
+
+def validate_bus(what_bus):
+    # Function to validate we have a valid bus for our application
     # Evaluate the user input
-    # Is the users bus selection in our busses list? if yes, then proced
-    # These are only First Essex busses
+    # Is the users bus selection in our buses list? if yes, then procced
+    # These are only First Essex buses
     buses = ["64", "65", "67", "70", "74B", "88", "104"]
 
     if what_bus in buses:
-        bus = bus_service(what_bus)
-        #bus = bus_route(what_bus)
+        print("The number " + str(what_bus) + " is a bus service we support")
+        return what_bus
     else:
-        # If they end up here they didnt enter a valid bus number
-        # Ask them to re enter the bus number
-        ######## This is still in error - need to work on this ################  - 17/05/2020 tw
-        what_bus = input("Sorry thats not a Colchester bus we cover.  Your choices are:\n '65', '67', '70', '74B', '88', '104' \nPlease enter your bus number?: ")
-        if what_bus in buses:
-            bus = bus_service(what_bus)
-            #bus = bus_route(what_bus)
-        else:
-            print("Im sorry, that is not a route we cover. Good bye")
-            quit()
+        print("We do not support bus service number " + str(what_bus) + " at this time")
+        return "Unsupported service"
 
+    #if what_bus in buses:
+    #    # bus = bus_service(what_bus)
+    #    bus = bus_route(what_bus)
+    #else:
+    #    # If they end up here they didnt enter a valid bus number
+    #    # Ask them to re enter the bus number
+    #    what_bus = input(
+    #        "Sorry thats not a Colchester bus we cover.  Your choices are:\n '65', '67', '70', '74B', '88', '104' \nPlease enter your bus number?: ")
+    #    if what_bus in buses:
+    #        bus = bus_service(what_bus)
+    #        # bus = bus_route(what_bus)
+    #    else:
+    #        print("Im sorry, that is not a route we cover. Good bye")
+    #        quit()
     # A little bit of Essex speak init
-    print("\nBOSH!!!, Here's the bus you want peeps.\n The number "  + bus[0] + " runs between " + bus[1] + " and "
-          + bus[2])
+    # print("\nBOSH!!!, Here's the bus you want peeps.\n The number " + bus[0] + " runs between " + bus[1] + " and "
+    #      + bus[2])
 
 def bus_service(bus_number):
 
-    bus = bus_number
+    bus_num = bus_number
     # Try out retrieving a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
-    url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus, APP_ID, API_KEY)
+    url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus_num, APP_ID, API_KEY)
     http = urllib3.PoolManager()
 
     # Request our data, and decode the json data returned
@@ -139,7 +157,7 @@ def bus_service(bus_number):
     inbound = bus_service_dict['directions'][1]['destination']['description']
 
     # Return the bus number and its endpoints
-    return bus_number, outbound, inbound
+    return bus_num, outbound, inbound
 
 def next_bus_live():
     # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
@@ -176,16 +194,41 @@ def bus_route(bus_number):
 
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
-    my_dict = json.loads(response.data.decode('utf-8'))
-    for stop in my_dict['stops']:
+    bus_route_dict = json.loads(response.data.decode('utf-8'))
+    for stop in bus_route_dict['stops']:
         print("The bus is at the " + stop['stop_name'] + " stop at " + stop['time'])
         print("The bus stop is at lat/long " + str(stop['latitude']) + "," + str(stop['longitude']))
 
-
-
 def map_it():
     # Folium mapping
-    pass
+
+    # same as above but using a for loop - Less typing in this one and no variable for a counter
+    for stop in my_dict['stops']:
+        print(stop['stop_name'] + "," +  str(stop['latitude']) + "," + str(stop['longitude']))
+
+        #testing out folium
+        route_65 = folium.Map(location=[stop['latitude'], stop['longitude']], zoom_start=20)
+        # Pass a string in popup parameter
+        folium.Marker([stop['latitude'], stop['longitude']], popup=stop['stop_name']).add_to(route_65)
+        # Save the output to an html file
+        route_65.save(" route_65.html ")
+
+        # Import location csv data into pandas
+        df_location = pd.read_csv('location.csv')
+        # Check we got it
+        print(df_location.head())
+
+        # Prep data for the map
+        locations = df_location[['lat', 'long']]
+        locationlist = locations.values.tolist()
+        print(len(locationlist))
+
+        # Now build the map
+        route_65 = folium.Map(location=[51.89518, 0.89575 ], zoom_start=14)
+        for point in range(0, len(locationlist)):
+            folium.Marker(locationlist[point], popup=stop['stop_name']).add_to(route_65)
+            route_65.save(" route_65.html ")
+
 
 if __name__ == '__main__':
     main()

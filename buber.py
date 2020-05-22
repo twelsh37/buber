@@ -101,7 +101,6 @@ def main():
     bus = validate_bus(what_bus)
     # DEBUG - TO BE REMOVED
     print("From validate_bus() we got " + str(bus))
-
     # only work on valid bus routes supported by our application
     if bus != "Unsupported service":
         # Get some information on the bus_service
@@ -111,7 +110,7 @@ def main():
         sys.exit("Unsupported service at this time. Goodbye")
         
     stop, lat, long = bus_route(what_bus)
-    print("DEBUG 0: Returned from  bus_route() " + stop + " , " + str(lat) + " , " +  str(long))
+    print("DEBUG 0: Returned from  bus_route(). Last Stop is " + stop + " , " + str(lat) + " , " +  str(long))
 
 def validate_bus(what_bus):
     # Function to validate we have a valid bus for our application
@@ -183,46 +182,50 @@ def bus_route(bus_number):
     x = 0
     # iterate through our dictionary giving us the bus stop names and their
     # lat and long so we can plot them on a map.
-    while x < len(bus_route_dict['stops']):
-        print(x)
-        for stop in bus_route_dict['stops']:
-            bus_stand = stop['stop_name']
-            lat = stop['latitude']
-            long = stop['longitude']
-            print("DEBUG 4: " + bus_stand + " , " + str(lat) + " , " + str(long))
+    #while x < len(bus_route_dict['stops']):
+    #    print(x)
+    for stop in bus_route_dict['stops']:
+        bus_stand = stop['stop_name']
+        lat = stop['latitude']
+        long = stop['longitude']
+        print("DEBUG 4: " + bus_stand + " , " + str(lat) + " , " + str(long))
+        map_it(bus_stand, lat, long)
+    return bus_stand, lat, long
 
-        return bus_stand, lat, long
-
-def map_it():
+def map_it(bus_stand, lat, long):
 
     # Folium mapping
+    stop = bus_stand
+    latitude = lat
+    longitude = long
 
+    #while True:
+    print("DEBUG 5: " + stop + " , " + str(latitude) + " , " + str(longitude))
+    #for stop in my_dict['stops']:
 
-    for stop in my_dict['stops']:
-        print(stop['stop_name'] + "," +  str(stop['latitude']) + "," + str(stop['longitude']))
 
         #testing out folium
-        route_65 = folium.Map(location=[stop['latitude'], stop['longitude']], zoom_start=20)
+        ##route_65 = folium.Map(location=[stop['latitude'], stop['longitude']], zoom_start=20)
         # Pass a string in popup parameter
-        folium.Marker([stop['latitude'], stop['longitude']], popup=stop['stop_name']).add_to(route_65)
+        ##folium.Marker([stop['latitude'], stop['longitude']], popup=stop['stop_name']).add_to(route_65)
         # Save the output to an html file
-        route_65.save(" route_65.html ")
+        ##route_65.save(" route_65.html ")
 
         # Import location csv data into pandas
-        df_location = pd.read_csv('location.csv')
+        ##df_location = pd.read_csv('location.csv')
         # Check we got it
-        print(df_location.head())
+        ##print(df_location.head())
 
         # Prep data for the map
-        locations = df_location[['lat', 'long']]
-        locationlist = locations.values.tolist()
-        print(len(locationlist))
+        #locations = df_location[['lat', 'long']]
+        #locationlist = locations.values.tolist()
+        #print(len(locationlist))
 
         # Now build the map
-        route_65 = folium.Map(location=[51.89518, 0.89575 ], zoom_start=14)
-        for point in range(0, len(locationlist)):
-            folium.Marker(locationlist[point], popup=stop['stop_name']).add_to(route_65)
-            route_65.save(" route_65.html ")
+        #route_65 = folium.Map(location=[51.89518, 0.89575 ], zoom_start=14)
+        #for point in range(0, len(locationlist)):
+            #folium.Marker(locationlist[point], popup=stop['stop_name']).add_to(route_65)
+            #route_65.save(" route_65.html ")
 
 
 if __name__ == '__main__':

@@ -16,8 +16,9 @@ https://www.geeksforgeeks.org/python-plotting-google-map-using-folium-package/?r
 2. Retreive data for the Number 65 bus heading outbound - DONE
 3. Take user input for bus number. Only allow then to enter the buses we have supplied - DONE
     3.1 If user enter an incorrect bus number twice offer them the option to find the bus number by final destination
-4. User enters a bus number. We are only using a subset of buses for Colchester. "64", "65", "67", "88", "104".
-We have atcocodes for these stops and can define start and end points
+4. User enters a bus number. We are only using a subset of buses for Colchester. "64", "65", "67", "70", "74", "88",
+   "104".
+   We have atcocodes for these stops and can define start and end points
 5. User enters a destination - Program tells user what bus goes there and when the next departure is (from Town Center)
 6. Display data to user on a map. - Milestone 1
 
@@ -86,6 +87,8 @@ import json
 import pandas as pd
 import folium
 import sys
+import tkinter as tk
+
 
 # Constants
 APP_ID = '9e91c41c'
@@ -100,12 +103,12 @@ def main():
     # Validate if it is a service we support
     bus = validate_bus(what_bus)
     # DEBUG - TO BE REMOVED
-    print("From validate_bus() we got " + str(bus))
+    print("DEBUG 0: From validate_bus() we got " + str(bus))
     # only work on valid bus routes supported by our application
     if bus != "Unsupported service":
         # Get some information on the bus_service
         bus_serv, outbound, inbound = bus_service(bus)
-        print("From bus_service(): Bus Number " + bus_serv + " , Traveling from: " + outbound + ", Traveling to: " + inbound)
+        print("DEBUG 0: From bus_service(): Bus Number " + bus_serv + " , Traveling from: " + outbound + ", Traveling to: " + inbound)
     else:
         sys.exit("Unsupported service at this time. Goodbye")
         
@@ -129,7 +132,8 @@ def validate_bus(what_bus):
 def bus_service(bus_number):
 
     bus_num = bus_number
-    # Try out retrieving a URL via urllib3
+
+    # Retriev a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
     url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus_num, APP_ID, API_KEY)
     http = urllib3.PoolManager()
@@ -167,12 +171,36 @@ def next_bus_timetabled():
     print(next_bus_timetabled_dict)
 
 def bus_route(bus_number):
+    # This function queries the transport API for route data for a specific bus service number
+    # It receives input as bus_number from main()
+    # it provides bus_stand, lat and long of each of the stops along the specific buses route
+    # and passes them to map_it() for route mapping.
 
     bus = bus_number
-    # Try out retrieving a URL via urllib3
+    # Retrieve a URL via urllib3
+    # This could be tidied up using data from URL but for expediancy it is coded in here
     # Use %s to pass in the Constants and Variables to make up the URL
-    url = BASE_URL + '/route/FESX/%s/inbound/1500IM2456B/2020-05-21/19:25/timetable.json?app_id=%s&app_key=%s' \
-                     '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+    if bus == "64":
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2349B/2020-05-22/06:40/timetable.json?app_id=%s&app_key=%s' \
+                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+    elif bus == "65":
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2456B/2020-05-22/19:27/timetable.json?app_id=%s&app_key=%s' \
+                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+    elif bus == "67":
+        url = BASE_URL + '/route/FESX/%s/inbound/150033038003/2020-05-22/06:55/timetable.json?app_id=%s&app_key=%s' \
+                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+    elif bus == "70":
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/2020-05-22/06:51/timetable.json?app_id=%s&app_key=%s' \
+                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+    elif bus == "74B":
+        url = BASE_URL + '/route/FESX/%s/inbound/15003303800B/2020-05-22/20:10/timetable.json?app_id=%s&app_key=%s' \
+                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+    elif bus == "88":
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/2020-05-22/05:50/timetable.json?app_id=%s&app_key=%s' \
+                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+    else:
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM52/2020-05-22/06:00/timetable.json?app_id=%s&app_key=%s' \
+                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -182,8 +210,6 @@ def bus_route(bus_number):
     x = 0
     # iterate through our dictionary giving us the bus stop names and their
     # lat and long so we can plot them on a map.
-    #while x < len(bus_route_dict['stops']):
-    #    print(x)
     for stop in bus_route_dict['stops']:
         bus_stand = stop['stop_name']
         lat = stop['latitude']
@@ -193,39 +219,41 @@ def bus_route(bus_number):
     return bus_stand, lat, long
 
 def map_it(bus_stand, lat, long):
+    # This function maps teh bus route on a folium map
+    # It receives input as bus_stand, lat, and long from bus_route
 
     # Folium mapping
     stop = bus_stand
     latitude = lat
     longitude = long
 
-    #while True:
+    # DEBUG code to show we are receiving code from get_route()
     print("DEBUG 5: " + stop + " , " + str(latitude) + " , " + str(longitude))
-    #for stop in my_dict['stops']:
 
+    # Setup a dictionary to store the information we need to build
+    # a folium map
+    map_it_dict = {}
+    map_it_dict['stop'] = stop
+    map_it_dict['latitude'] = latitude
+    map_it_dict['longitude'] = longitude
+    print("DEBUG 5.1: map_it_dict" + str(map_it_dict))
 
-        #testing out folium
-        ##route_65 = folium.Map(location=[stop['latitude'], stop['longitude']], zoom_start=20)
-        # Pass a string in popup parameter
-        ##folium.Marker([stop['latitude'], stop['longitude']], popup=stop['stop_name']).add_to(route_65)
-        # Save the output to an html file
-        ##route_65.save(" route_65.html ")
+    # lets get the dict into pandas
+    map_it_df = pd.DataFrame([map_it_dict])
+    # Check we got data - we get it. tw 22/05/2020
+    #print(map_it_df.head())
 
-        # Import location csv data into pandas
-        ##df_location = pd.read_csv('location.csv')
-        # Check we got it
-        ##print(df_location.head())
+    # Prep data for the map
+    locations = map_it_df[['latitude', 'longitude']]
+    locationlist = locations.values.tolist()
+    print(len(locationlist))
 
-        # Prep data for the map
-        #locations = df_location[['lat', 'long']]
-        #locationlist = locations.values.tolist()
-        #print(len(locationlist))
-
-        # Now build the map
-        #route_65 = folium.Map(location=[51.89518, 0.89575 ], zoom_start=14)
-        #for point in range(0, len(locationlist)):
-            #folium.Marker(locationlist[point], popup=stop['stop_name']).add_to(route_65)
-            #route_65.save(" route_65.html ")
+    # Now build the map
+    # the Location is the Lat/Long for Colchester
+    route_64 = folium.Map(location=[51.8959,0.8919] , zoom_start=14)
+    for point in range(0, len(locationlist)):
+        folium.Marker((locationlist[point]) , popup=map_it_dict['stop']).add_to(route_64)
+        route_64.save("route_maps/route_64.html ")
 
 
 if __name__ == '__main__':

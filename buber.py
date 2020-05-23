@@ -87,8 +87,8 @@ import json
 import pandas as pd
 import folium
 import sys
-import tkinter as tk
-
+import os
+import webbrowser
 
 # Constants
 APP_ID = '9e91c41c'
@@ -102,18 +102,16 @@ def main():
 
     # Validate if it is a service we support
     bus = validate_bus(what_bus)
-    # DEBUG - TO BE REMOVED
-    print("DEBUG 0: From validate_bus() we got " + str(bus))
+
     # only work on valid bus routes supported by our application
     if bus != "Unsupported service":
         # Get some information on the bus_service
         bus_serv, outbound, inbound = bus_service(bus)
-        print("DEBUG 0: From bus_service(): Bus Number " + bus_serv + " , Traveling from: " + outbound + ", Traveling to: " + inbound)
+        print("Bus Number: " + bus_serv + " , Travels between " + outbound + ", and " + inbound)
     else:
         sys.exit("Unsupported service at this time. Goodbye")
         
     stop, lat, long = bus_route(what_bus)
-    print("DEBUG 0: Returned from  bus_route(). Last Stop is " + stop + " , " + str(lat) + " , " +  str(long))
 
 def validate_bus(what_bus):
     # Function to validate we have a valid bus for our application
@@ -198,7 +196,7 @@ def bus_route(bus_number):
     elif bus == "88":
         url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/2020-05-22/05:50/timetable.json?app_id=%s&app_key=%s' \
                          '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
-    else:
+    else:   # The 104
         url = BASE_URL + '/route/FESX/%s/inbound/1500IM52/2020-05-22/06:00/timetable.json?app_id=%s&app_key=%s' \
                          '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
 
@@ -207,53 +205,49 @@ def bus_route(bus_number):
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
     bus_route_dict = json.loads(response.data.decode('utf-8'))
-    x = 0
+
+    # Create a blank list that will be passed to Map_it() function
+    bus_route_list = []
+
     # iterate through our dictionary giving us the bus stop names and their
     # lat and long so we can plot them on a map.
     for stop in bus_route_dict['stops']:
         bus_stand = stop['stop_name']
         lat = stop['latitude']
         long = stop['longitude']
-        print("DEBUG 4: " + bus_stand + " , " + str(lat) + " , " + str(long))
-        map_it(bus_stand, lat, long)
+        bus_route_list.append([bus_stand,lat,long])
+
+    map_it(bus_route_list)
+
     return bus_stand, lat, long
 
-def map_it(bus_stand, lat, long):
+def map_it(bus_route_list):
     # This function maps teh bus route on a folium map
     # It receives input as bus_stand, lat, and long from bus_route
 
-    # Folium mapping
-    stop = bus_stand
-    latitude = lat
-    longitude = long
+    # lets get the list into pandas
+    map_it_df = pd.DataFrame(bus_route_list)
 
-    # DEBUG code to show we are receiving code from get_route()
-    print("DEBUG 5: " + stop + " , " + str(latitude) + " , " + str(longitude))
-
-    # Setup a dictionary to store the information we need to build
-    # a folium map
-    map_it_dict = {}
-    map_it_dict['stop'] = stop
-    map_it_dict['latitude'] = latitude
-    map_it_dict['longitude'] = longitude
-    print("DEBUG 5.1: map_it_dict" + str(map_it_dict))
-
-    # lets get the dict into pandas
-    map_it_df = pd.DataFrame([map_it_dict])
-    # Check we got data - we get it. tw 22/05/2020
-    #print(map_it_df.head())
+    # Rename the Dataframe column headings
+    # to something more meaningful
+    map_it_df.columns=['stop', 'lat', 'long']
 
     # Prep data for the map
-    locations = map_it_df[['latitude', 'longitude']]
+    locations = map_it_df[['lat', 'long']]
     locationlist = locations.values.tolist()
-    print(len(locationlist))
 
-    # Now build the map
-    # the Location is the Lat/Long for Colchester
-    route_64 = folium.Map(location=[51.8959,0.8919] , zoom_start=14)
+    # Now build the map centered on Colchester Essex
+    route_map = folium.Map(location=[51.8959,0.8919] , zoom_start=14)
+
+    # Run through the list of stops and plot them on a map.
+    # add Bus Stop names to the markers
+    # Finally save teh route_map so it can be displayed later
     for point in range(0, len(locationlist)):
-        folium.Marker((locationlist[point]) , popup=map_it_dict['stop']).add_to(route_64)
-        route_64.save("route_maps/route_64.html ")
+        folium.Marker((locationlist[point]) , popup=map_it_df['stop'][point]).add_to(route_map)
+        route_map.save("route_maps/route_map.html ")
+
+    # open the route map in our browser
+    webbrowser.open('file://' + os.path.realpath('C:/Data/Stanford/code/buber/route_maps/route_map.html'))
 
 
 if __name__ == '__main__':

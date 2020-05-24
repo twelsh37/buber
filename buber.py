@@ -2,19 +2,19 @@
 Filename: buber.py
 
 ### Description: ###
-An application to provide information onspecific bus numbers
+An application to provide information on specific bus numbers
 through Colchester, Essex, UK
 
 This will be done with the help of the transportapi
 https://developer.transportapi.com/
 
-Map plotting is via folium and teh following tutorial
+Map plotting is via folium and the following tutorial
 https://www.geeksforgeeks.org/python-plotting-google-map-using-folium-package/?ref=rp
 
 ### Basic Decomposition: - "Eat the elephant one bite at a time" ###
-1. Hold API key and Program ID so we dont need to keep entering it or URLS - DONE
-2. Retreive data for the Number 65 bus heading outbound - DONE
-3. Take user input for bus number. Only allow then to enter the buses we have supplied - DONE
+1. Hold API key and Program ID so we dont need to keep entering it or URLS
+2. Retreive data for the Number 65 bus heading outbound
+3. Take user input for bus number. Only allow then to enter the buses we have supplied
     3.1 If user enter an incorrect bus number twice offer them the option to find the bus number by final destination
 4. User enters a bus number. We are only using a subset of buses for Colchester. "64", "65", "67", "70", "74", "88",
    "104".
@@ -98,7 +98,7 @@ BASE_URL = 'https://transportapi.com/v3/uk/bus/'
 def main():
 
     # Ask the user to input a bus number
-    what_bus = input("What bus do you want?: ")
+    what_bus = input("Which First Essex bus do you require?: ")
 
     # Validate if it is a service we support
     bus = validate_bus(what_bus)
@@ -108,10 +108,12 @@ def main():
         # Get some information on the bus_service
         bus_serv, outbound, inbound = bus_service(bus)
         print("Bus Number: " + bus_serv + " , Travels between " + outbound + ", and " + inbound)
+        print("Preparing route map for the number " + bus_serv + " bus." )
+        print("This will only take a short while...")
     else:
         sys.exit("Unsupported service at this time. Goodbye")
         
-    stop, lat, long = bus_route(what_bus)
+    stop, lat, long = bus_route(bus)
 
 def validate_bus(what_bus):
     # Function to validate we have a valid bus for our application
@@ -121,11 +123,12 @@ def validate_bus(what_bus):
     buses = ["64", "65", "67", "70", "74B", "88", "104"]
 
     if what_bus in buses:
-        print("The number " + str(what_bus) + " is a bus service we support")
         return what_bus
     else:
         print("We do not support bus service number " + str(what_bus) + " at this time")
+        print("supported buses are: " + str(buses)[1:-1])
         return "Unsupported service"
+
 
 def bus_service(bus_number):
 
@@ -231,6 +234,7 @@ def map_it(bus_route_list):
     # Rename the Dataframe column headings
     # to something more meaningful
     map_it_df.columns=['stop', 'lat', 'long']
+    #print(map_it_df.head())
 
     # Prep data for the map
     locations = map_it_df[['lat', 'long']]

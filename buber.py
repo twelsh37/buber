@@ -91,11 +91,14 @@ import os
 import webbrowser
 
 # Constants
-APP_ID = '9e91c41c'
-API_KEY = 'ebaa5b9461f7f42778146f909073d17a'
+APP_ID = 'APP_ID'
+API_KEY = 'API_KEY'
 BASE_URL = 'https://transportapi.com/v3/uk/bus/'
 
 def main():
+    print("Path: " + os.environ['PATH'])
+    print("App_ID: " + str(os.environ['APP_ID']))
+    print("Path: " + str(os.environ['API_KEY']))
 
     # Ask the user to input a bus number
     what_bus = input("Which First Essex bus do you require?: ")
@@ -112,8 +115,10 @@ def main():
         print("This will only take a short while...")
     else:
         sys.exit("Unsupported service at this time. Goodbye")
-        
-    stop, lat, long = bus_route(bus)
+
+    # We dont actually use stop, lat and l,ong here, we just pass
+    # the bus to the bus_route function.
+    bus_stand, lat, long = bus_route(bus)
 
 def validate_bus(what_bus):
     # Function to validate we have a valid bus for our application
@@ -128,7 +133,6 @@ def validate_bus(what_bus):
         print("We do not support bus service number " + str(what_bus) + " at this time")
         print("supported buses are: " + str(buses)[1:-1])
         return "Unsupported service"
-
 
 def bus_service(bus_number):
 
@@ -158,7 +162,6 @@ def next_bus_live():
     response = http.request('GET', url)
     next_bus_live_dict = json.loads(response.data.decode('utf-8'))
     print(next_bus_live_dict)
-
 
 def next_bus_timetabled():
     # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
@@ -252,7 +255,6 @@ def map_it(bus_route_list):
 
     # open the route map in our browser
     webbrowser.open('file://' + os.path.realpath('C:/Data/Stanford/code/buber/route_maps/route_map.html'))
-
 
 if __name__ == '__main__':
     main()

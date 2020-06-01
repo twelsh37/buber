@@ -91,14 +91,11 @@ import os
 import webbrowser
 
 # Constants
-APP_ID = 'APP_ID'
-API_KEY = 'API_KEY'
+APP_ID = '9e91c41c'
+API_KEY = 'ebaa5b9461f7f42778146f909073d17a'
 BASE_URL = 'https://transportapi.com/v3/uk/bus/'
 
 def main():
-    print("Path: " + os.environ['PATH'])
-    print("App_ID: " + str(os.environ['APP_ID']))
-    print("Path: " + str(os.environ['API_KEY']))
 
     # Ask the user to input a bus number
     what_bus = input("Which First Essex bus do you require?: ")
@@ -214,6 +211,7 @@ def bus_route(bus_number):
 
     # Create a blank list that will be passed to Map_it() function
     bus_route_list = []
+
 
     # iterate through our dictionary giving us the bus stop names and their
     # lat and long so we can plot them on a map.

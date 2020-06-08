@@ -160,7 +160,7 @@ def bus_service(bus_number):
     # Retrieve a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
     url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus_num, buberconfig.APP_ID, buberconfig.API_KEY)
-    logging.debug('DEBUG 2: APP_ID: ' + buberconfig.APP_ID + ' API_KEY:  '+ buberconfig.API_KEY)
+    logging.debug('DEBUG 2: APP_ID: ' + buberconfig.APP_ID + ' API_KEY:  ' + buberconfig.API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -246,8 +246,8 @@ def bus_route(bus_number):
         long = stop['longitude']
         bus_route_list.append([bus_stand,lat,long])
 
-    #map_it(bus_route_list)
-    return bus_route_list
+    map_it(bus_route_list)
+    #return bus_route_list
 
 def map_it(bus_route_list):
     # This function maps teh bus route on a folium map

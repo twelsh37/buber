@@ -63,14 +63,16 @@ First part of data recieved from url pull
 'operator_name': 'First Essex',
 'id': <URL>>
 
-'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=9e91c41c&app_key=ebaa5b9461f7f42778146f909073d17a&group=route&nextbuses=yes'
+'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=9e91c41c& \
+app_key=ebaa5b9461f7f42778146f909073d17a&group=route&nextbuses=yes'
 
 3. Bus departures at a given bus stop (timetabled) - Function next_bus_timetabled()
 This URL gives you the timetabled information for that particulatr stop
 ##PARAMETERS TO PROVIDE
 date, time, atcocode
 
-https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=9e91c41c&app_key=ebaa5b9461f7f42778146f909073d17a&group=route
+https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=9e91c41c& \
+app_key=ebaa5b9461f7f42778146f909073d17a&group=route
 
 4. The route of one specific bus - Function bus_route()
 This gives every stop the bus will make between its atcocode bust stop and the final destination
@@ -78,7 +80,8 @@ This gives every stop the bus will make between its atcocode bust stop and the f
 ##PARAMETERS TO PROVIDE
 date, time, atcocode
 
-https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=9e91c41c&app_key=ebaa5b9461f7f42778146f909073d17a&edge_geometry=false&stops=ALL
+https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=9e91c41c& \
+app_key=ebaa5b9461f7f42778146f909073d17a&edge_geometry=false&stops=ALL
 
 """
 # Import Libraries we need
@@ -89,14 +92,31 @@ import folium
 import sys
 import os
 import webbrowser
+import logging
+from datetime import date
+
+# Import our buberconfig
+import buberconfig
+
+# Set up logging
+logging.basicConfig(filename='log/buber.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Uncomment the logging.disable line to disable logging.
+# Setting it to logging.CRITICAL disabled all logging
+# CRITICAL and below Logging levels in order lowest to
+# highest are as follows
+# DEBUG (Lowest, INFO, WARNING, ERROR, CRITICAL (Highest)
+#logging.disable(logging.CRITICAL)
+
+# Start logging Program
+logging.info('Start of Program')
 
 # Constants
-APP_ID = '9e91c41c'
-API_KEY = 'ebaa5b9461f7f42778146f909073d17a'
-BASE_URL = 'https://transportapi.com/v3/uk/bus/'
+BASE_URL = 'https://transportapi.com/v3/uk/bus'
+TODAY = date.today()
+
 
 def main():
-
     # Ask the user to input a bus number
     what_bus = input("Which First Essex bus do you require?: ")
 
@@ -111,11 +131,13 @@ def main():
         print("Preparing route map for the number " + bus_serv + " bus." )
         print("This will only take a short while...")
     else:
+        logging.debug('DEBUG 0: Unsupported bus %s. Program exits via sys.exit' % what_bus)
+        logging.info('End of Program')
         sys.exit("Unsupported service at this time. Goodbye")
 
-    # We dont actually use stop, lat and l,ong here, we just pass
-    # the bus to the bus_route function.
-    bus_stand, lat, long = bus_route(bus)
+        # We dont actually use stop, lat and l,ong here, we just pass
+        # the bus to the bus_route function.
+
 
 def validate_bus(what_bus):
     # Function to validate we have a valid bus for our application
@@ -135,9 +157,11 @@ def bus_service(bus_number):
 
     bus_num = bus_number
 
-    # Retriev a URL via urllib3
+    # Retrieve a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
-    url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus_num, APP_ID, API_KEY)
+    url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus_num, buberconfig.APP_ID, buberconfig.API_KEY)
+    logging.debug('DEBUG 2: APP_ID: ' + buberconfig.APP_ID + ' API_KEY:  '+ buberconfig.API_KEY)
+
     http = urllib3.PoolManager()
 
     # Request our data, and decode the json data returned
@@ -151,7 +175,8 @@ def bus_service(bus_number):
 
 def next_bus_live():
     # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = BASE_URL + '/stop/1500AA20/live.json?app_id=%s&app_key=%s&group=route&nextbuses=yes' % ( APP_ID, API_KEY)
+    url = BASE_URL + '/stop/1500AA20/live.json?app_id=buberconfig.APP_ID&app_key=buberconfig.API_KEY&group=route&' \
+                     'nextbuses=yes'
 
     http = urllib3.PoolManager()
 
@@ -162,7 +187,8 @@ def next_bus_live():
 
 def next_bus_timetabled():
     # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = BASE_URL + '/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=%s&app_key=%s' % (APP_ID, API_KEY)
+    url = BASE_URL + '/stop/1500AA20/%s/07:10/timetable.json?app_id=buberconfig.APP_ID&' \
+                     'app_key=buberconfig.API_KEY' % (TODAY)
 
     http = urllib3.PoolManager()
 
@@ -182,26 +208,26 @@ def bus_route(bus_number):
     # This could be tidied up using data from URL but for expediancy it is coded in here
     # Use %s to pass in the Constants and Variables to make up the URL
     if bus == "64":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2349B/2020-05-22/06:40/timetable.json?app_id=%s&app_key=%s' \
-                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2349B/%s/06:40/timetable.json?app_id=buberconfig.APP_ID'\
+                         '&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
     elif bus == "65":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2456B/2020-05-22/19:27/timetable.json?app_id=%s&app_key=%s' \
-                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2456B/%s/19:27/timetable.json?app_id=buberconfig.APP_ID'\
+                         '&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
     elif bus == "67":
-        url = BASE_URL + '/route/FESX/%s/inbound/150033038003/2020-05-22/06:55/timetable.json?app_id=%s&app_key=%s' \
-                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+        url = BASE_URL + '/route/FESX/%s/inbound/150033038003/%s/06:55/timetable.json?' \
+                         'app_id=buberconfig.APP_ID&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
     elif bus == "70":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/2020-05-22/06:51/timetable.json?app_id=%s&app_key=%s' \
-                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/%s/06:51/timetable.json?app_id=buberconfig.APP_ID' \
+                         '&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
     elif bus == "74B":
-        url = BASE_URL + '/route/FESX/%s/inbound/15003303800B/2020-05-22/20:10/timetable.json?app_id=%s&app_key=%s' \
-                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+        url = BASE_URL + '/route/FESX/%s/inbound/15003303800B/%s/20:10/timetable.json?' \
+                         'app_id=buberconfig.APP_ID&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
     elif bus == "88":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/2020-05-22/05:50/timetable.json?app_id=%s&app_key=%s' \
-                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/%s/05:50/timetable.json?app_id=buberconfig.APP_ID&' \
+                        'app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
     else:   # The 104
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM52/2020-05-22/06:00/timetable.json?app_id=%s&app_key=%s' \
-                         '&edge_geometry=false&stops=ALL' % (bus, APP_ID, API_KEY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM52/%s/06:00/timetable.json?app_id=buberconfig.APP_ID&' \
+                         'app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
 
     http = urllib3.PoolManager()
 
@@ -212,7 +238,6 @@ def bus_route(bus_number):
     # Create a blank list that will be passed to Map_it() function
     bus_route_list = []
 
-
     # iterate through our dictionary giving us the bus stop names and their
     # lat and long so we can plot them on a map.
     for stop in bus_route_dict['stops']:
@@ -221,9 +246,8 @@ def bus_route(bus_number):
         long = stop['longitude']
         bus_route_list.append([bus_stand,lat,long])
 
-    map_it(bus_route_list)
-
-    return bus_stand, lat, long
+    #map_it(bus_route_list)
+    return bus_route_list
 
 def map_it(bus_route_list):
     # This function maps teh bus route on a folium map
@@ -235,7 +259,7 @@ def map_it(bus_route_list):
     # Rename the Dataframe column headings
     # to something more meaningful
     map_it_df.columns=['stop', 'lat', 'long']
-    #print(map_it_df.head())
+    print(map_it_df.head())
 
     # Prep data for the map
     locations = map_it_df[['lat', 'long']]
@@ -256,3 +280,6 @@ def map_it(bus_route_list):
 
 if __name__ == '__main__':
     main()
+
+# Stop logging Program
+logging.info('End of Program')

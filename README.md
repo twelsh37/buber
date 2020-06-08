@@ -42,6 +42,6 @@ The file should look something like this
 buberconfig.py<br>
 ```python
 # .gitignore should include reference to buberconfig.py
-APP_ID = '<YOUR API ID>'
+APP_ID = '<YOUR APP_ID>'
 API_KEY = '<YOUR API_KEY>
 ```

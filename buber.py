@@ -123,6 +123,9 @@ def main():
     # Validate if it is a service we support
     bus = validate_bus(what_bus)
 
+    # Get the bus Route
+    bus_route(bus)
+
     # only work on valid bus routes supported by our application
     if bus != "Unsupported service":
         # Get some information on the bus_service
@@ -134,10 +137,6 @@ def main():
         logging.debug('DEBUG 0: Unsupported bus %s. Program exits via sys.exit' % what_bus)
         logging.info('End of Program')
         sys.exit("Unsupported service at this time. Goodbye")
-
-        # We dont actually use stop, lat and l,ong here, we just pass
-        # the bus to the bus_route function.
-
 
 def validate_bus(what_bus):
     # Function to validate we have a valid bus for our application
@@ -160,7 +159,6 @@ def bus_service(bus_number):
     # Retrieve a URL via urllib3
     # Use %s to pass in the Constants and Variables to make up the URL
     url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus_num, buberconfig.APP_ID, buberconfig.API_KEY)
-    logging.debug('DEBUG 2: APP_ID: ' + buberconfig.APP_ID + ' API_KEY:  ' + buberconfig.API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -204,30 +202,31 @@ def bus_route(bus_number):
     # and passes them to map_it() for route mapping.
 
     bus = bus_number
+
     # Retrieve a URL via urllib3
     # This could be tidied up using data from URL but for expediancy it is coded in here
     # Use %s to pass in the Constants and Variables to make up the URL
     if bus == "64":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2349B/%s/06:40/timetable.json?app_id=buberconfig.APP_ID'\
-                         '&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2349B/%s/06:40/timetable.json?app_id=%s&app_key=%s&' \
+                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
     elif bus == "65":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2456B/%s/19:27/timetable.json?app_id=buberconfig.APP_ID'\
-                         '&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2456B/%s/19:27/timetable.json?app_id=%s&app_key=%s&' \
+                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
     elif bus == "67":
-        url = BASE_URL + '/route/FESX/%s/inbound/150033038003/%s/06:55/timetable.json?' \
-                         'app_id=buberconfig.APP_ID&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
+        url = BASE_URL + '/route/FESX/%s/inbound/150033038003/%s/06:55/timetable.json?app_id=%s&app_key=%s&' \
+                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
     elif bus == "70":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/%s/06:51/timetable.json?app_id=buberconfig.APP_ID' \
-                         '&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/%s/06:51/timetable.json?app_id=%s&app_key=%s&' \
+                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
     elif bus == "74B":
-        url = BASE_URL + '/route/FESX/%s/inbound/15003303800B/%s/20:10/timetable.json?' \
-                         'app_id=buberconfig.APP_ID&app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
+        url = BASE_URL + '/route/FESX/%s/inbound/15003303800B/%s/20:10/timetable.json?app_id=%s&app_key=%s&' \
+                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
     elif bus == "88":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/%s/05:50/timetable.json?app_id=buberconfig.APP_ID&' \
-                        'app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/%s/05:50/timetable.json?app_id=%s&app_key=%s&' \
+                         'edge_geometry=false&stFops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
     else:   # The 104
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM52/%s/06:00/timetable.json?app_id=buberconfig.APP_ID&' \
-                         'app_key=buberconfig.API_KEY&edge_geometry=false&stops=ALL' % (bus, TODAY)
+        url = BASE_URL + '/route/FESX/%s/inbound/1500IM52/%s/06:00/timetable.json?app_id=%s&app_key=%s&' \
+                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
 
     http = urllib3.PoolManager()
 
@@ -246,8 +245,10 @@ def bus_route(bus_number):
         long = stop['longitude']
         bus_route_list.append([bus_stand,lat,long])
 
+    logging.debug('DEBUG 5: Bus Route List ', bus_route_list)
+
     map_it(bus_route_list)
-    #return bus_route_list
+
 
 def map_it(bus_route_list):
     # This function maps teh bus route on a folium map
@@ -259,7 +260,7 @@ def map_it(bus_route_list):
     # Rename the Dataframe column headings
     # to something more meaningful
     map_it_df.columns=['stop', 'lat', 'long']
-    print(map_it_df.head())
+    logging.debug('DEBUG 6: map_it_df.head()', map_it_df.head())
 
     # Prep data for the map
     locations = map_it_df[['lat', 'long']]
@@ -273,10 +274,10 @@ def map_it(bus_route_list):
     # Finally save teh route_map so it can be displayed later
     for point in range(0, len(locationlist)):
         folium.Marker((locationlist[point]) , popup=map_it_df['stop'][point]).add_to(route_map)
-        route_map.save("route_maps/route_map.html ")
+        route_map.save("c:\\Data\\PythonProjects\\buber\\route_maps\\route_map.html ")
 
     # open the route map in our browser
-    webbrowser.open('file://' + os.path.realpath('C:/Data/Stanford/code/buber/route_maps/route_map.html'))
+    webbrowser.open('file://' + os.path.realpath('c:\\Data\\PythonProjects\\buber\\route_maps\\route_map.html'))
 
 if __name__ == '__main__':
     main()

@@ -12,36 +12,34 @@ Map plotting is via folium and the following tutorial
 https://www.geeksforgeeks.org/python-plotting-google-map-using-folium-package/?ref=rp
 
 ### Basic Decomposition: - "Eat the elephant one bite at a time" ###
-1. Hold API key and Program ID so we dont need to keep entering it or URLS
-2. Retreive data for the Number 65 bus heading outbound
-3. Take user input for bus number. Only allow then to enter the buses we have supplied
+1. Hide API key and Program ID so we dont need to keep entering it or URLS - Done
+2. Retreive data for the Number 65 bus heading outbound - Done
+3. Take user input for bus number. Only allow then to enter the buses we have supplied - Done
     3.1 If user enter an incorrect bus number twice offer them the option to find the bus number by final destination
+        - NEEDS IMPLEMENTING
 4. User enters a bus number. We are only using a subset of buses for Colchester. "64", "65", "67", "70", "74", "88",
    "104".
    We have atcocodes for these stops and can define start and end points
 5. User enters a destination - Program tells user what bus goes there and when the next departure is (from Town Center)
-6. Display data to user on a map. - Milestone 1
+6. Display data to user on a map. - Milestone 1 - Done
 
 ### Questions the app should be able to answer ###
-1. When is the next bus - enter bus number return next bus time for town center location
-2. Given a location display what busses go there. if you select a bus then display the time of the next bus
+1. When is the next bus - enter bus number return next bus time.
+2. Given a location display what buses go there. if you select a bus then display the time of the next bus.
 
 ### Future work if we have time ###
 1. Make a windows graphical app
 2. Make an android graphical app
-3. Deploy ity to a virtual android phone and run it
+3. Deploy it to a virtual android phone and run it
 
-Tools/Frameworks
-1. Kivy Framework - https://realpython.com/mobile-app-kivy-python/
-2. Android dev app - https://developer.android.com/studio
+TRANSPORT API - app_id & app_key are not a valid keys in the examples below. Yoou need to reg as a developer at
+transportapi.com to generate your own API key
 
-TRANSPORT API
 1. This URL identifies One particular bus service, identified by line and operator - Function bus_service(bus_number)
 It can be used to get the BUS_START and BUS_END of the journey
 RETURNS: bus_number, outbound, inbound
 
-'https://transportapi.com/v3/uk/bus/services/FESX:65.json?app_id=9e91c41c&app_key=ebaa5b9461f7f42778146f909073d17a'
-
+'https://transportapi.com/v3/uk/bus/services/FESX:65.json?app_id=8e1c41c&app_key=ebaa5b9461f7f42778146f909073d17a'
 
 2. Bus departures at a given bus stop (live) - Function next_bus_live()
 By passing in the atcocode for the bus stop you can get live departure information for that stop
@@ -63,7 +61,7 @@ First part of data recieved from url pull
 'operator_name': 'First Essex',
 'id': <URL>>
 
-'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=9e91c41c& \
+'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=8e1c41c& \
 app_key=ebaa5b9461f7f42778146f909073d17a&group=route&nextbuses=yes'
 
 3. Bus departures at a given bus stop (timetabled) - Function next_bus_timetabled()
@@ -71,7 +69,7 @@ This URL gives you the timetabled information for that particulatr stop
 ##PARAMETERS TO PROVIDE
 date, time, atcocode
 
-https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=9e91c41c& \
+https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=8e1c41c& \
 app_key=ebaa5b9461f7f42778146f909073d17a&group=route
 
 4. The route of one specific bus - Function bus_route()
@@ -80,10 +78,10 @@ This gives every stop the bus will make between its atcocode bust stop and the f
 ##PARAMETERS TO PROVIDE
 date, time, atcocode
 
-https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=9e91c41c& \
+https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=8e1c41c& \
 app_key=ebaa5b9461f7f42778146f909073d17a&edge_geometry=false&stops=ALL
-
 """
+
 # Import Libraries we need
 import urllib3
 import json
@@ -93,13 +91,16 @@ import sys
 import os
 import webbrowser
 import logging
+import time
 from datetime import date
+
 
 # Import our buberconfig
 import buberconfig
 
-# Set up logging
-logging.basicConfig(filename='log/buber.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Set up logging - Default id to ,log info and above
+# change 'level=logging.INFO' to 'level=logging.DEBUG' to get debug messages
+logging.basicConfig(filename='log/buber.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Uncomment the logging.disable line to disable logging.
 # Setting it to logging.CRITICAL disabled all logging
@@ -114,9 +115,13 @@ logging.info('Start of Program')
 # Constants
 BASE_URL = 'https://transportapi.com/v3/uk/bus'
 TODAY = date.today()
-
+# define day of week for Sunday (0 - Monday, 1 - Tuesday, 2 - Wednesday, 3 - Thursday, 4 - Friday, 5 - Satarday,
+# 6 - Sunday) - Get this from datetime - datetime.date.today().weekday() - Gives numeric for day of week
+SUNDAY = 6
+starttime = time.time()
 
 def main():
+
     # Ask the user to input a bus number
     what_bus = input("Which First Essex bus do you require?: ")
 
@@ -149,7 +154,7 @@ def validate_bus(what_bus):
         return what_bus
     else:
         print("We do not support bus service number " + str(what_bus) + " at this time")
-        print("supported buses are: " + str(buses)[1:-1])
+        print("supported buses are: " + str(buses)[0:-1])
         return "Unsupported service"
 
 def bus_service(bus_number):
@@ -193,7 +198,7 @@ def next_bus_timetabled():
     # Request our data, and decode the json data returned
     response = http.request('GET', url)
     next_bus_timetabled_dict = json.loads(response.data.decode('utf-8'))
-    print(next_bus_timetabled_dict)
+    #print(next_bus_timetabled_dict)
 
 def bus_route(bus_number):
     # This function queries the transport API for route data for a specific bus service number
@@ -245,7 +250,7 @@ def bus_route(bus_number):
         long = stop['longitude']
         bus_route_list.append([bus_stand,lat,long])
 
-    logging.debug('DEBUG 5: Bus Route List ', bus_route_list)
+    logging.debug('DEBUG 5: Bus Route List ' + str(bus_route_list))
 
     map_it(bus_route_list)
 
@@ -260,7 +265,7 @@ def map_it(bus_route_list):
     # Rename the Dataframe column headings
     # to something more meaningful
     map_it_df.columns=['stop', 'lat', 'long']
-    logging.debug('DEBUG 6: map_it_df.head()', map_it_df.head())
+    logging.debug('DEBUG 6: map_it_df.head()' + str(map_it_df.head()))
 
     # Prep data for the map
     locations = map_it_df[['lat', 'long']]
@@ -282,5 +287,7 @@ def map_it(bus_route_list):
 if __name__ == '__main__':
     main()
 
-# Stop logging Program
+# Record how long the program took to run and then stop logging program
+logging.info('Program Run Time (s): ' + str(time.time() - starttime))
 logging.info('End of Program')
+

@@ -25,7 +25,8 @@ It will then be expanded to provide bus information from further afield with the
 ## Future work
 1. Make a windows graphical app
 2. Make an android graphical app
-3. Deploy it to a virtual android phone and run it<b>
+3. Deploy it to a virtual android phone and run it
+
 4 Make website enabled
 
 ## Possible Tools/Frameworks

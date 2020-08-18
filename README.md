@@ -26,7 +26,7 @@ It will then be expanded to provide bus information from further afield with the
 1. Make a windows graphical app
 2. Make an android graphical app
 3. Deploy it to a virtual android phone and run it
-4. Make website enabled
+4. Make web-enabled app
 
 ## Possible Tools/Frameworks
 1. Kivy Framework - https://realpython.com/mobile-app-kivy-python/

@@ -34,7 +34,7 @@ It will then be expanded to provide bus information from further afield with the
 
 ## If you copy the code
 Please feel free to fork or download the code. Im all for collabaration.
-In order to run the code though you will have to get an application IF, APP_ID and API_KEY from transportapi.com.
+In order to run the code though you will have to get an application APP_ID and API_KEY from transportapi.com.
 When you have these you need to create a file called buberconfig.py and put the keys in there. This prevents us from passing our API keys around in the code.
 
 The file should look something like this

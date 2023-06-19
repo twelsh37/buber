@@ -86,6 +86,7 @@ app_key=ebaa5b9461f7f42778146f909073d17a&edge_geometry=false&stops=ALL
 import urllib3
 import json
 import pandas as pd
+import requests
 import folium
 import sys
 import os
@@ -144,145 +145,195 @@ def main():
         sys.exit("Unsupported service at this time. Goodbye")
 
 def validate_bus(what_bus):
-    # Function to validate we have a valid bus for our application
-    # Evaluate the user input
-    # Is the users bus selection in our buses list? if yes, then procced
-    # These are only First Essex buses
-    buses = ["64", "65", "67", "70", "74B", "88", "104"]
+    """
+    Validate if the bus service number is supported by our application.
 
-    if what_bus in buses:
-        return what_bus
-    else:
-        print("We do not support bus service number " + str(what_bus) + " at this time")
-        print("supported buses are: " + str(buses)[0:-1])
-        return "Unsupported service"
+    Args:
+        what_bus (str): The bus service number to validate.
+
+    Returns:
+        str: The validated bus service number if it is supported by our application.
+            Otherwise, a message indicating that the service is unsupported.
+
+    """
+    try:
+        # These are only First Essex buses
+        buses = {"S4", "65", "67", "70", "74B", "88", "104"}
+
+        if what_bus in buses:
+            return what_bus
+        else:
+            raise ValueError(f"We do not support bus service number {what_bus} at this time. Supported buses are: {', '.join(buses)}")
+    except ValueError as e:
+        return str(e)
 
 def bus_service(bus_number):
+    """
+    Retrieve the endpoints of a bus service given its number.
 
-    bus_num = bus_number
+    Args:
+        bus_number (str): The number of the bus service to retrieve.
 
-    # Retrieve a URL via urllib3
-    # Use %s to pass in the Constants and Variables to make up the URL
-    url = BASE_URL + '/services/FESX:%s.json?app_id=%s&app_key=%s' % (bus_num, buberconfig.APP_ID, buberconfig.API_KEY)
+    Returns:
+        tuple: A tuple containing the bus service number and its endpoints.
 
-    http = urllib3.PoolManager()
+    Raises:
+        ValueError: If the bus service number is invalid or cannot be retrieved.
 
-    # Request our data, and decode the json data returned
-    response = http.request('GET', url)
-    bus_service_dict = json.loads(response.data.decode('utf-8'))
-    outbound = bus_service_dict['directions'][0]['destination']['description']
-    inbound = bus_service_dict['directions'][1]['destination']['description']
+    """
+    try:
+        bus_num = bus_number
 
-    # Return the bus number and its endpoints
-    return bus_num, outbound, inbound
+        # Retrieve a URL via requests
+        # Use f-strings to pass in the Constants and Variables to make up the URL
+        url = f"{BASE_URL}/services/FESX:{bus_num}.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}"
+
+        response = requests.get(url)
+        response.raise_for_status()
+
+        bus_service_dict = response.json()
+        outbound = bus_service_dict['directions'][0]['destination']['description']
+        inbound = bus_service_dict['directions'][1]['destination']['description']
+
+        # Return the bus number and its endpoints
+        return bus_num, outbound, inbound
+    except (requests.exceptions.RequestException, ValueError) as e:
+        raise ValueError(f"Failed to retrieve bus service {bus_number}: {e}")
 
 def next_bus_live():
-    # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = BASE_URL + '/stop/1500AA20/live.json?app_id=buberconfig.APP_ID&app_key=buberconfig.API_KEY&group=route&' \
-                     'nextbuses=yes'
+    """
+    Retrieve live data for the next buses at a specific stop.
 
-    http = urllib3.PoolManager()
+    Returns:
+        dict: A dictionary containing the live data for the next buses at the specified stop.
 
-    # Request our data, and decode the json data returned
-    response = http.request('GET', url)
-    next_bus_live_dict = json.loads(response.data.decode('utf-8'))
-    print(next_bus_live_dict)
+    Raises:
+        ValueError: If the live data cannot be retrieved.
+
+    """
+    try:
+        # Retrieve a URL via requests
+        # Use f-strings to pass in the Constants and Variables to make up the URL
+        url = f"{BASE_URL}/stop/1500AA20/live.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}&group=route&nextbuses=yes"
+
+        response = requests.get(url)
+        response.raise_for_status()
+
+        next_bus_live_dict = response.json()
+        print(next_bus_live_dict)
+        return next_bus_live_dict
+    except (requests.exceptions.RequestException, ValueError) as e:
+        raise ValueError(f"Failed to retrieve live bus data: {e}")
 
 def next_bus_timetabled():
-    # URL to retrieve data. This may need more paramaters to be passed in. Currently only APP_ID and API_KEY
-    url = BASE_URL + '/stop/1500AA20/%s/07:10/timetable.json?app_id=buberconfig.APP_ID&' \
-                     'app_key=buberconfig.API_KEY' % (TODAY)
+    """
+    Retrieve timetabled data for the next buses at a specific stop.
 
-    http = urllib3.PoolManager()
+    Returns:
+        dict: A dictionary containing the timetabled data for the next buses at the specified stop.
 
-    # Request our data, and decode the json data returned
-    response = http.request('GET', url)
-    next_bus_timetabled_dict = json.loads(response.data.decode('utf-8'))
-    #print(next_bus_timetabled_dict)
+    Raises:
+        ValueError: If the timetabled data cannot be retrieved.
+
+    """
+    try:
+        # Retrieve a URL via requests
+        # Use f-strings to pass in the Constants and Variables to make up the URL
+        url = f"{BASE_URL}/stop/1500AA20/{TODAY}/07:10/timetable.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}"
+
+        response = requests.get(url)
+        response.raise_for_status()
+
+        next_bus_timetabled_dict = response.json()
+        #print(next_bus_timetabled_dict)
+        return next_bus_timetabled_dict
+    except (requests.exceptions.RequestException, ValueError) as e:
+        raise ValueError(f"Failed to retrieve timetabled bus data: {e}")
 
 def bus_route(bus_number):
-    # This function queries the transport API for route data for a specific bus service number
-    # It receives input as bus_number from main()
-    # it provides bus_stand, lat and long of each of the stops along the specific buses route
-    # and passes them to map_it() for route mapping.
+    """
+    Retrieve route data for a specific bus service number.
 
-    bus = bus_number
+    Args:
+        bus_number (str): The number of the bus service to retrieve.
 
-    # Retrieve a URL via urllib3
-    # This could be tidied up using data from URL but for expediancy it is coded in here
-    # Use %s to pass in the Constants and Variables to make up the URL
-    if bus == "64":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2349B/%s/06:40/timetable.json?app_id=%s&app_key=%s&' \
-                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
-    elif bus == "65":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM2456B/%s/19:27/timetable.json?app_id=%s&app_key=%s&' \
-                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
-    elif bus == "67":
-        url = BASE_URL + '/route/FESX/%s/inbound/150033038003/%s/06:55/timetable.json?app_id=%s&app_key=%s&' \
-                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
-    elif bus == "70":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/%s/06:51/timetable.json?app_id=%s&app_key=%s&' \
-                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
-    elif bus == "74B":
-        url = BASE_URL + '/route/FESX/%s/inbound/15003303800B/%s/20:10/timetable.json?app_id=%s&app_key=%s&' \
-                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
-    elif bus == "88":
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM77A/%s/05:50/timetable.json?app_id=%s&app_key=%s&' \
-                         'edge_geometry=false&stFops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
-    else:   # The 104
-        url = BASE_URL + '/route/FESX/%s/inbound/1500IM52/%s/06:00/timetable.json?app_id=%s&app_key=%s&' \
-                         'edge_geometry=false&stops=ALL' % (bus, TODAY, buberconfig.APP_ID, buberconfig.API_KEY)
+    Returns:
+        list: A list containing the bus stand, latitude, and longitude of each stop along the bus route.
 
-    http = urllib3.PoolManager()
+    Raises:
+        ValueError: If the route data cannot be retrieved.
 
-    # Request our data, and decode the json data returned
-    response = http.request('GET', url)
-    bus_route_dict = json.loads(response.data.decode('utf-8'))
+    """
+    try:
+        bus = bus_number
 
-    # Create a blank list that will be passed to Map_it() function
-    bus_route_list = []
+        # Retrieve a URL via requests
+        # Use f-strings to pass in the Constants and Variables to make up the URL
+        if bus == "64":
+            url = f"{BASE_URL}/route/FESX/{bus}/inbound/1500IM140/{TODAY}/07:05/timetable.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}&edge_geometry=false&stops=ALL"
+        elif bus == "65":
+            url = f"{BASE_URL}/route/FESX/{bus}/inbound/1500IM2456B/{TODAY}/19:27/timetable.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}&edge_geometry=false&stops=ALL"
+        elif bus == "67":
+            url = f"{BASE_URL}/route/FESX/{bus}/inbound/150033038003/{TODAY}/06:55/timetable.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}&edge_geometry=false&stops=ALL"
+        elif bus == "70":
+            url = f"{BASE_URL}/route/FESX/{bus}/inbound/1500IM77A/{TODAY}/06:51/timetable.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}&edge_geometry=false&stops=ALL"
+        elif bus == "74B":
+            url = f"{BASE_URL}/route/FESX/{bus}/inbound/15003303800B/{TODAY}/20:10/timetable.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}&edge_geometry=false&stops=ALL"
+        elif bus == "88":
+            url = f"{BASE_URL}/route/FESX/{bus}/inbound/1500IM77A/{TODAY}/05:50/timetable.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}&edge_geometry=false&stops=ALL"
+        else:   # The 104
+            url = f"{BASE_URL}/route/FESX/{bus}/inbound/1500IM52/{TODAY}/06:00/timetable.json?app_id={buberconfig.APP_ID}&app_key={buberconfig.API_KEY}&edge_geometry=false&stops=ALL"
 
-    # iterate through our dictionary giving us the bus stop names and their
-    # lat and long so we can plot them on a map.
-    for stop in bus_route_dict['stops']:
-        bus_stand = stop['stop_name']
-        lat = stop['latitude']
-        long = stop['longitude']
-        bus_route_list.append([bus_stand,lat,long])
+        response = requests.get(url)
+        response.raise_for_status()
 
-    logging.debug('DEBUG 5: Bus Route List ' + str(bus_route_list))
+        bus_route_dict = response.json()
 
-    map_it(bus_route_list)
+        # Create a list of bus stands, latitudes, and longitudes
+        bus_route_list = [[stop['stop_name'], stop['latitude'], stop['longitude']] for stop in bus_route_dict['stops']]
+
+        logging.debug('DEBUG 5: Bus Route List ' + str(bus_route_list))
+
+        return bus_route_list
+    except (requests.exceptions.RequestException, ValueError) as e:
+        raise ValueError(f"Failed to retrieve bus route data for bus service {bus_number}: {e}")
 
 
 def map_it(bus_route_list):
-    # This function maps teh bus route on a folium map
-    # It receives input as bus_stand, lat, and long from bus_route
+    """
+    Map the bus route on a Folium map.
 
-    # lets get the list into pandas
-    map_it_df = pd.DataFrame(bus_route_list)
+    Args:
+        bus_route_list (list): A list containing the bus stand, latitude, and longitude of each stop along the bus route.
 
-    # Rename the Dataframe column headings
-    # to something more meaningful
-    map_it_df.columns=['stop', 'lat', 'long']
-    logging.debug('DEBUG 6: map_it_df.head()' + str(map_it_df.head()))
+    Raises:
+        ValueError: If the map cannot be created.
 
-    # Prep data for the map
-    locations = map_it_df[['lat', 'long']]
-    locationlist = locations.values.tolist()
+    """
+    try:
+        # Convert the list to a pandas DataFrame
+        map_it_df = pd.DataFrame(bus_route_list)
 
-    # Now build the map centered on Colchester Essex
-    route_map = folium.Map(location=[51.8959,0.8919] , zoom_start=14)
+        # Rename the DataFrame columns
+        map_it_df.columns = ['stop', 'lat', 'long']
+        logging.debug('DEBUG 6: map_it_df.head()' + str(map_it_df.head()))
 
-    # Run through the list of stops and plot them on a map.
-    # add Bus Stop names to the markers
-    # Finally save teh route_map so it can be displayed later
-    for point in range(0, len(locationlist)):
-        folium.Marker((locationlist[point]) , popup=map_it_df['stop'][point]).add_to(route_map)
+        # Prepare the data for the map
+        locations = map_it_df[['lat', 'long']]
+        locationlist = locations.values.tolist()
+
+        # Build the map centered on Colchester, Essex
+        route_map = folium.Map(location=[51.8959, 0.8919], zoom_start=14)
+
+        # Plot the stops on the map and add their names as popups
+        for point in range(0, len(locationlist)):
+            folium.Marker((locationlist[point]), popup=map_it_df['stop'][point]).add_to(route_map)
+
+        # Save the map to a file and open it in the browser
         route_map.save("c:\\Data\\PythonProjects\\buber\\route_maps\\route_map.html ")
-
-    # open the route map in our browser
-    webbrowser.open('file://' + os.path.realpath('c:\\Data\\PythonProjects\\buber\\route_maps\\route_map.html'))
+        webbrowser.open('file://' + os.path.realpath('c:\\Data\\PythonProjects\\buber\\route_maps\\route_map.html'))
+    except Exception as e:
+        raise ValueError(f"Failed to create bus route map: {e}")
 
 if __name__ == '__main__':
     main()

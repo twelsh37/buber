@@ -39,7 +39,7 @@ transportapi.com to generate your own API key
 It can be used to get the BUS_START and BUS_END of the journey
 RETURNS: bus_number, outbound, inbound
 
-'https://transportapi.com/v3/uk/bus/services/FESX:65.json?app_id=8e1c41c&app_key=ebaa5b9461f7f42778146f909073d17a'
+'https://transportapi.com/v3/uk/bus/services/FESX:65.json?app_id=8e1c41c&app_key=<API KEY>'
 
 2. Bus departures at a given bus stop (live) - Function next_bus_live()
 By passing in the atcocode for the bus stop you can get live departure information for that stop
@@ -62,7 +62,7 @@ First part of data recieved from url pull
 'id': <URL>>
 
 'https://transportapi.com/v3/uk/bus/stop/1500AA20/live.json?app_id=8e1c41c& \
-app_key=ebaa5b9461f7f42778146f909073d17a&group=route&nextbuses=yes'
+app_key=<APP KEY>a&group=route&nextbuses=yes'
 
 3. Bus departures at a given bus stop (timetabled) - Function next_bus_timetabled()
 This URL gives you the timetabled information for that particulatr stop
@@ -70,7 +70,7 @@ This URL gives you the timetabled information for that particulatr stop
 date, time, atcocode
 
 https://transportapi.com/v3/uk/bus/stop/1500AA20/2020-05-15/07:10/timetable.json?app_id=8e1c41c& \
-app_key=ebaa5b9461f7f42778146f909073d17a&group=route
+app_key=<APP KEY>a&group=route
 
 4. The route of one specific bus - Function bus_route()
 This gives every stop the bus will make between its atcocode bust stop and the final destination
@@ -79,7 +79,7 @@ This gives every stop the bus will make between its atcocode bust stop and the f
 date, time, atcocode
 
 https://transportapi.com/v3/uk/bus/route/FESX/65/outbound/1500AA20/2020-05-15/07:10/timetable.json?app_id=8e1c41c& \
-app_key=ebaa5b9461f7f42778146f909073d17a&edge_geometry=false&stops=ALL
+app_key=<APP KEY>a&edge_geometry=false&stops=ALL
 """
 
 # Import Libraries we need
